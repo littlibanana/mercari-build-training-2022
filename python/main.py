@@ -1,11 +1,12 @@
-from ast import keyword
+from ast import For, keyword
+from base64 import encode
 import os
 import logging
 import pathlib
 import json
 import hashlib
 import sqlite3
-from fastapi import FastAPI, Form, HTTPException, Query
+from fastapi import FastAPI, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -85,13 +86,16 @@ def search(name: str = Query(..., alias="keyword")):
 
 
 @ app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
+def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = Form(...)):
     logger.info(f"Receive item: {name, category}")
     conn = sqlite3.connect('../db/mercari.sqlite3')
     c = conn.cursor()
-    with open(image, "rb") as f:
-        bytes = f.read()
-        hash = hashlib.sha256(bytes).hexdigest()
+
+    file_name = image.filename
+    print(file_name)
+
+    hash = hashlib.sha256(file_name.replace(
+        ".jpg", "").encode('utf-8')).hexdigest()
 
     cate_data = c.execute(
         f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()
@@ -119,12 +123,12 @@ def add_item(name: str = Form(...), category: str = Form(...), image: str = Form
         return {"message": f"List new item {name}"}
 
 
-@ app.get("/image/{items_image}")
-async def get_image(items_image):
+@ app.get("/image/{image_filename}")
+async def get_image(image_filename):
     # Create image path
-    image = images / items_image
+    image = images / image_filename
 
-    if not items_image.endswith(".jpg"):
+    if not image_filename.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image path does not end with .jpg")
 
