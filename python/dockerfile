@@ -1,14 +1,14 @@
 FROM python:3.10-slim-buster
 
-COPY ./db ./db
+COPY db ./db
 
-WORKDIR ./python
+WORKDIR /python
 
-COPY ./python/main.py main.py
+COPY python/main.py main.py
 
-COPY ./python/images images
+COPY python/images images
 
-COPY ./python/requirements.txt requirements.txt
+COPY python/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 
