@@ -23,6 +23,22 @@ app.add_middleware(
 )
 
 
+# create database
+conn = sqlite3.connect('../db/mercari.sqlite3')
+c = conn.cursor()
+with open('../db/items.db') as f:
+    schema = f.read()
+    c.execute(f"""CREATE TABLE IF NOT EXISTS {schema}""")
+with open('../db/category.db') as f:
+    schema = f.read()
+    c.execute(f"""CREATE TABLE IF NOT EXISTS {schema}""")
+
+logger.info("Successfully create database")
+
+conn.commit()
+conn.close()
+
+
 @app.get("/")
 def root():
     return {"message": "Hello, world!"}
