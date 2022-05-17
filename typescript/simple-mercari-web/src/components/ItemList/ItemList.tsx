@@ -31,7 +31,7 @@ export const ItemList: React.FC<Prop> = (props) => {
       .then(response => response.json())
       .then(data => {
         console.log('GET success:', data);
-        setItems(data);
+        setItems(data.items);
         onLoadCompleted && onLoadCompleted();
       })
       .catch(error => {
@@ -51,7 +51,7 @@ export const ItemList: React.FC<Prop> = (props) => {
         return (
           <div key={item.id} className='ItemList'>
             {/* TODO: Task 1: Replace the placeholder image with the item image */}
-            <img src={placeholderImage} />
+            <img src={server + "/image/" + item.image_filename} alt="" />
             <p>
               <span>Name: {item.name}</span>
               <br />

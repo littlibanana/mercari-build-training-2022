@@ -1,5 +1,4 @@
-from ast import For, keyword
-from base64 import encode
+from fileinput import filename
 import os
 import logging
 import pathlib
@@ -13,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
-images = pathlib.Path(__file__).parent.resolve() / "image"
+images = pathlib.Path(__file__).parent.resolve() / "images"
 origins = [os.environ.get('FRONT_URL', 'http://localhost:3000')]
 app.add_middleware(
     CORSMiddleware,
@@ -51,15 +50,11 @@ def get_item():
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     data = c.execute(f"""
-            SELECT items.name, category.name AS category
+            SELECT items.name, category.name AS category, items.image_filename
             FROM items
             INNER JOIN category ON items.category_id = category.id""").fetchall()
-    if data == []:
-        conn.close()
-        return "No result"
-    else:
-        conn.close()
-        return {"items": data}
+    conn.close()
+    return {"items": data}
 
 
 @app.get("/items/{item_id}")
@@ -72,13 +67,8 @@ async def read_item(item_id: str, q: str | None = None):
             FROM items
             INNER JOIN category ON items.category_id=category.id
             WHERE items.id='{item_id}'""").fetchall()
-    print(data)
-    if data == []:
-        conn.close()
-        return "No result"
-    else:
-        conn.close()
-        return data[0]
+    conn.close()
+    return data[0]
 
 
 @app.get("/search")
@@ -92,13 +82,8 @@ def search(name: str = Query(..., alias="keyword")):
             FROM items
             INNER JOIN category ON items.category_id=category.id
             WHERE items.name='{name}'""").fetchall()
-    print(data)
-    if data == []:
-        conn.close()
-        return "No result"
-    else:
-        conn.close()
-        return {"items": data}
+    conn.close()
+    return {"items": data}
 
 
 @ app.post("/items")
@@ -106,12 +91,12 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
     logger.info(f"Receive item: {name, category}")
     conn = sqlite3.connect('../db/mercari.sqlite3')
     c = conn.cursor()
-
-    file_name = image.filename
-    print(file_name)
-
-    hash = hashlib.sha256(file_name.replace(
+    hashed_file_name = hashlib.sha256(image.filename.replace(
         ".jpg", "").encode('utf-8')).hexdigest()
+
+    contents = image.file.read()
+    with open("./images/"+hashed_file_name+".jpg", 'wb') as f:
+        f.write(contents)
 
     cate_data = c.execute(
         f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()
@@ -123,7 +108,7 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
             f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()[0][0]
 
         c.execute("INSERT INTO items VALUES(?, ?, ?, ?);",
-                  (None, name, cate_id, hash+'.jpg'))
+                  (None, name, cate_id, hashed_file_name+'.jpg'))
         conn.commit()
         conn.close()
         return {"message": f"List new item {name}"}
@@ -133,7 +118,7 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
             f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()[0][0]
 
         c.execute("INSERT INTO items VALUES(?, ?, ?, ?);",
-                  (None, name, cate_id, hash+'.jpg'))
+                  (None, name, cate_id, hashed_file_name+'.jpg'))
         conn.commit()
         conn.close()
         return {"message": f"List new item {name}"}

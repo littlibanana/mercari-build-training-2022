@@ -27,3 +27,6 @@ https://docs.python.org/3/howto/logging.html
 DockerFile
 https://hub.docker.com/_/python
 https://stackoverflow.com/questions/46517241/docker-build-requires-exactly-1-arguments
+
+Upload Image File and save in backend
+https://stackoverflow.com/questions/70520522/how-can-i-read-uploadfile-in-fastapi
