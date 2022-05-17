@@ -1,3 +1,16 @@
 FROM node:16-alpine
+
 WORKDIR /app
-CMD ["node", "-v"]
+
+COPY typescript/simple-mercari-web/public public
+COPY typescript/simple-mercari-web/src src
+COPY typescript/simple-mercari-web/package-lock.json package-lock.json
+COPY typescript/simple-mercari-web/package.json package.json
+COPY typescript/simple-mercari-web/README.md README.md
+COPY typescript/simple-mercari-web/tsconfig.json tsconfig.json
+
+RUN npm ci
+
+CMD ["npm", "start"]
+
+#docker build -t build2022/web:latest -f dockerfile .
