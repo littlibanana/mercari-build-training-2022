@@ -72,7 +72,7 @@ async def read_item(item_id: str, q: str | None = None):
 
 
 @app.get("/search")
-async def search(name: str = Query(..., alias="keyword")):
+def search(name: str = Query(..., alias="keyword")):
     conn = sqlite3.connect('../db/mercari.sqlite3')
     # logger.info("Successfully connect to db")
     conn.row_factory = sqlite3.Row
@@ -82,20 +82,19 @@ async def search(name: str = Query(..., alias="keyword")):
             FROM items
             INNER JOIN category ON items.category_id=category.id
             WHERE items.name='{name}'""").fetchall()
-
     conn.close()
     return {"items": data}
 
 
 @ app.post("/items")
-async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = Form(...)):
+def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = Form(...)):
     logger.info(f"Receive item: {name, category}")
     conn = sqlite3.connect('../db/mercari.sqlite3')
     c = conn.cursor()
     hashed_file_name = hashlib.sha256(image.filename.replace(
         ".jpg", "").encode('utf-8')).hexdigest()
 
-    contents = await image.read()
+    contents = image.file.read()
     with open("./images/"+hashed_file_name+".jpg", 'wb') as f:
         f.write(contents)
 
