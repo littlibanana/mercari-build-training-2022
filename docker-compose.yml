@@ -1,0 +1,18 @@
+version: "3.10"
+services:
+  api:
+    build: 
+      dockerfile: python/dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      - FRONT_URL=http://localhost:3000
+  front:
+    build:
+      dockerfile: typescript/simple-mercari-web/dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://localhost:9000
+
+#remember adding http:// before url
