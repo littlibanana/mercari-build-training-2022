@@ -138,4 +138,3 @@ async def get_image(image_filename):
         image = images / "default.jpg"
 
     return FileResponse(image)
-a
