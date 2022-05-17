@@ -54,7 +54,7 @@ def get_item():
             FROM items
             INNER JOIN category ON items.category_id = category.id""").fetchall()
     conn.close()
-    return data
+    return {"items": data}
 
 
 @app.get("/items/{item_id}")
@@ -84,7 +84,7 @@ async def search(name: str = Query(..., alias="keyword")):
             WHERE items.name='{name}'""").fetchall()
 
     conn.close()
-    return data
+    return {"items": data}
 
 
 @ app.post("/items")
