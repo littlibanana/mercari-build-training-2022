@@ -1,8 +1,6 @@
-from fileinput import filename
 import os
 import logging
 import pathlib
-import json
 import hashlib
 import sqlite3
 from fastapi import FastAPI, Form, HTTPException, Query, UploadFile
@@ -58,7 +56,7 @@ def get_item():
 
 
 @app.get("/items/{item_id}")
-async def read_item(item_id: str, q: str | None = None):
+async def read_item(item_id: str):
     conn = sqlite3.connect('../db/mercari.sqlite3')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
@@ -68,13 +66,12 @@ async def read_item(item_id: str, q: str | None = None):
             INNER JOIN category ON items.category_id=category.id
             WHERE items.id='{item_id}'""").fetchall()
     conn.close()
-    return data[0]
+    return data
 
 
 @app.get("/search")
 def search(name: str = Query(..., alias="keyword")):
     conn = sqlite3.connect('../db/mercari.sqlite3')
-    # logger.info("Successfully connect to db")
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     data = c.execute(f"""
@@ -96,7 +93,7 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
 
     contents = image.file.read()
     with open("./images/"+hashed_file_name+".jpg", 'wb') as f:
-        f.write(contents)
+        f.write(contents)  # save image to backend
 
     cate_data = c.execute(
         f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()
@@ -104,24 +101,14 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
     if(cate_data == []):
         c.execute("INSERT INTO category VALUES(?, ?);",
                   (None, category))  # add new category
-        cate_id = c.execute(
-            f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()[0][0]
 
-        c.execute("INSERT INTO items VALUES(?, ?, ?, ?);",
-                  (None, name, cate_id, hashed_file_name+'.jpg'))
-        conn.commit()
-        conn.close()
-        return {"message": f"List new item {name}"}
-
-    else:
-        cate_id = c.execute(
-            f"SELECT id, name FROM category WHERE name = '{category}'").fetchall()[0][0]
-
-        c.execute("INSERT INTO items VALUES(?, ?, ?, ?);",
-                  (None, name, cate_id, hashed_file_name+'.jpg'))
-        conn.commit()
-        conn.close()
-        return {"message": f"List new item {name}"}
+    cate_id = c.execute(
+        f"SELECT id FROM category WHERE name = '{category}'").fetchall()[0][0]
+    c.execute("INSERT INTO items VALUES(?, ?, ?, ?);",
+              (None, name, cate_id, hashed_file_name+'.jpg'))
+    conn.commit()
+    conn.close()
+    return {"message": f"List new item {name}"}
 
 
 @ app.get("/image/{image_filename}")
