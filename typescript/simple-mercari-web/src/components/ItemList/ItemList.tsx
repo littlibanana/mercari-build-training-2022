@@ -8,7 +8,7 @@ interface Item {
 };
 
 const server = process.env.API_URL || 'http://127.0.0.1:9000';
-const placeholderImage = process.env.PUBLIC_URL + '/logo192.png';
+// const placeholderImage = process.env.PUBLIC_URL + '/logo192.png';
 
 interface Prop {
   reload?: boolean;
